@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aun's Cattle Academy — Herd Health Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600;700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F8F6FB;
+    --cream-deep:#ECE3F4;
+    --green:#5C3D82;
+    --green-deep:#3E2856;
+    --tan:#D3B3E8;
+    --rust:#D98C2B;
+    --rust-deep:#B36F1B;
+    --ink:#241B2E;
+    --sage:#9B85B0;
+    --line: rgba(36,27,46,0.14);
+    --white-card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Public Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .tag-mono{ font-family:'JetBrains Mono',monospace; }
+
+  /* Login / Signup overlay */
+  .auth-overlay{
+    position:fixed;
+    inset:0;
+    background:var(--green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:5000;
+    padding:20px;
+  }
+  .auth-box{
+    background:var(--white-card);
+    border-radius:12px;
+    padding:28px 24px;
+    width:100%;
+    max-width:340px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.25);
+  }
+  .auth-box h1{
+    font-family:'IBM Plex Serif',serif;
+    font-size:1.3rem;
+    color:var(--green-deep);
+    margin:0 0 2px 0;
+    text-align:center;
+  }
+  .auth-sub{
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.65rem;
+    color:var(--rust-deep);
+    letter-spacing:0.3px;
+    margin-bottom:18px;
+  }
+  .auth-tabs{
+    display:flex;
+    margin-bottom:16px;
+    border-bottom:1px solid var(--line);
+  }
+  .auth-tab{
+    flex:1;
+    background:none;
+    border:none;
+    padding:8px 0;
+    font-weight:600;
+    font-size:0.85rem;
+    color:var(--ink);
+    opacity:0.55;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  .auth-tab.active{ opacity:1; color:var(--green-deep); border-bottom-color:var(--green); }
+  .auth-box input{
+    width:100%;
+    box-sizing:border-box;
+    border:1px solid var(--line);
+    background:var(--cream);
+    border-radius:6px;
+    padding:9px 10px;
+    font-family:'Public Sans',sans-serif;
+    font-size:0.88rem;
+    margin-bottom:10px;
+  }
+  .auth-error{
+    color:var(--rust-deep);
+    font-size:0.76rem;
+    margin-top:8px;
+    min-height:1em;
+  }
+
+  /* Header / Ledger spine */
+  header.ledger{
+    background:var(--white-card);
+    color:var(--ink);
+    padding:0;
+    border-bottom:1px solid var(--line);
+  }
+  .brand-bar{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px 20px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    padding:16px 0;
+    border-bottom:none;
+  }
+  .brand h1{
+    font-family:'IBM Plex Serif',serif;
+    font-weight:700;
+    font-size:1.3rem;
+    margin:0;
+    color:var(--green-deep);
+    letter-spacing:0.2px;
+  }
+  .brand span.sub{
+    font-size:0.68rem;
+    color:var(--rust-deep);
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:0.3px;
+  }
+  nav.tabs{
+    display:flex;
+    gap:22px;
+    overflow-x:auto;
+    -ms-overflow-style:none;
+    scrollbar-width:none;
+  }
+  nav.tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{
+    flex:0 0 auto;
+    background:transparent;
+    color:var(--ink);
+    opacity:0.62;
+    border:none;
+    border-bottom:2px solid transparent;
+    border-radius:0;
+    padding:18px 2px 14px 2px;
+    font-family:'Public Sans',sans-serif;
+    font-weight:600;
+    font-size:0.86rem;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:border-color 0.15s, opacity 0.15s;
+  }
+  .tab-btn.active{
+    background:transparent;
+    color:var(--green-deep);
+    opacity:1;
+    border-bottom-color:var(--green);
+  }
+  .tab-btn:not(.active):hover{
+    color:var(--green-deep);
+    opacity:0.85;
+    background:transparent;
+  }
+
+  main{ padding:28px 24px; padding-bottom:60px; max-width:1180px; margin:0 auto;}
+  .panel{ display:none; }
+  .panel.active{ display:block; animation:fade .18s ease; }
+  @keyframes fade{ from{opacity:0} to{opacity:1} }
+
+  h2.section-title{
+    font-family:'IBM Plex Serif',serif;
+    font-weight:600;
+    font-size:1.15rem;
+    color:var(--green-deep);
+    margin:22px 0 10px 0;
+  }
+  h2.section-title:first-child{ margin-top:4px; }
+
+  /* Search */
+  .search-row{
+    display:flex;
+    gap:8px;
+    background:var(--white-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:6px;
+  }
+  .search-row input{
+    flex:1;
+    border:none;
+    background:transparent;
+    font-size:0.95rem;
+    padding:8px 6px;
+    font-family:'Public Sans',sans-serif;
+    color:var(--ink);
+    outline:none;
+  }
+  .search-row button{
+    background:var(--rust);
+    color:var(--cream);
+    border:none;
+    border-radius:7px;
+    padding:0 16px;
+    font-weight:600;
+    font-size:0.85rem;
+    cursor:pointer;
+  }
+  .search-row button:active{ background:var(--rust-deep); }
+
+  /* Dashboard stat block */
+  .stat-hero{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin:18px 0 6px 0;
+  }
+  .stat-hero .big{
+    font-family:'IBM Plex Serif',serif;
+    font-weight:700;
+    font-size:3rem;
+    color:var(--green-deep);
+    line-height:1;
+  }
+  .stat-hero .label{
+    font-size:0.85rem;
+    color:var(--ink);
+    opacity:0.7;
+  }
+
+  .station-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:14px;
+  }
+  .station-card{
+    background:var(--white-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .station-card .st-name{
+    font-family:'IBM Plex Serif',serif;
+    font-weight:600;
+    font-size:0.95rem;
+    color:var(--rust-deep);
+  }
+  .station-card .st-count{
+    font-family:'IBM Plex Serif',serif;
+    font-size:1.6rem;
+    font-weight:700;
+    color:var(--green-deep);
+    margin:2px 0 8px 0;
+  }
+
+  .breed-bar-row{
+    margin-bottom:7px;
+  }
+  .breed-bar-row .bl{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.72rem;
+    color:var(--ink);
+    opacity:0.8;
+    margin-bottom:2px;
+  }
+  .breed-bar-track{
+    background:var(--cream-deep);
+    border-radius:4px;
+    height:6px;
+    overflow:hidden;
+  }
+  .breed-bar-fill{
+    background:var(--sage);
+    height:100%;
+    border-radius:4px;
+  }
+  .station-card.aca .breed-bar-fill{ background:var(--rust); }
+
+  /* Result / roster table */
+  .roster-table-wrap{
+    overflow-x:auto;
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  table.roster-table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--white-card);
+  }
+  table.roster-table thead th{
+    background:var(--cream-deep);
+    text-align:left;
+    padding:11px 14px;
+    font-size:0.68rem;
+    font-weight:700;
+    color:var(--green-deep);
+    border-bottom:1px solid var(--line);
+    text-transform:uppercase;
+    letter-spacing:0.35px;
+    white-space:nowrap;
+  }
+  table.roster-table tbody tr{
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    transition:background 0.12s;
+  }
+  table.roster-table tbody tr:last-child{ border-bottom:none; }
+  table.roster-table tbody tr:hover{ background:var(--cream); }
+  table.roster-table td{
+    padding:10px 14px;
+    font-size:0.82rem;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  table.roster-table td.rt-name{ font-weight:700; color:var(--green-deep); border-left:3px solid var(--sage); }
+  table.roster-table tr.aca td.rt-name{ border-left-color:var(--rust); }
+  table.roster-table td.rt-phn{ font-family:'JetBrains Mono',monospace; font-size:0.76rem; color:var(--rust-deep); }
+  table.roster-table td.rt-station{
+    font-size:0.68rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+  /* Accordion (Animal Herd station groups) */
+  .accordion-section{
+    margin-bottom:14px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .accordion-header{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--cream-deep);
+    border:none;
+    padding:12px 14px;
+    cursor:pointer;
+    font-family:'IBM Plex Serif',serif;
+    font-weight:600;
+    font-size:0.92rem;
+    color:var(--green-deep);
+    text-align:left;
+  }
+  .accordion-header .acc-count{
+    font-family:'Public Sans',sans-serif;
+    font-weight:500;
+    font-size:0.75rem;
+    opacity:0.65;
+  }
+  .accordion-header .acc-chevron{
+    font-size:0.7rem;
+    color:var(--rust);
+  }
+  .accordion-body{
+    background:var(--white-card);
+  }
+  .accordion-body .roster-table-wrap{
+    border:none;
+    border-radius:0;
+  }
+
+  .empty-note{
+    text-align:center;
+    padding:30px 10px;
+    color:var(--ink);
+    opacity:0.55;
+    font-size:0.88rem;
+  }
+
+  /* buttons */
+  .btn{
+    display:inline-block;
+    background:var(--green);
+    color:var(--cream);
+    border:none;
+    border-radius:8px;
+    padding:9px 16px;
+    font-weight:600;
+    font-size:0.83rem;
+    cursor:pointer;
+    font-family:'Public Sans',sans-serif;
+  }
+  .btn.rust{ background:var(--rust); }
+  .btn.ghost{
+    background:transparent;
+    color:var(--green-deep);
+    border:1px solid var(--line);
+  }
+  .btn.small{ padding:5px 10px; font-size:0.72rem; }
+  .btn-row{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+
+  .add-fab-row{ display:flex; justify-content:flex-end; margin-bottom:10px; }
+
+  /* forms / modal-like panel */
+  .form-card{
+    background:var(--white-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:14px;
+  }
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .form-grid .full{ grid-column:1 / -1; }
+  .field label{
+    display:block;
+    font-size:0.7rem;
+    text-transform:none;
+    color:var(--ink);
+    opacity:0.7;
+    margin-bottom:3px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:var(--cream);
+    border-radius:6px;
+    padding:7px 8px;
+    font-family:'Public Sans',sans-serif;
+    font-size:0.85rem;
+    color:var(--ink);
+  }
+  .field textarea{ resize:vertical; min-height:50px; }
+  .photo-upload-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+  }
+  .photo-preview-box{
+    width:76px;
+    height:76px;
+    flex:0 0 76px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.6rem;
+    color:#999;
+    overflow:hidden;
+  }
+  .photo-preview-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+
+  /* Detail panel */
+  .detail-card{
+    background:var(--white-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:14px;
+  }
+  .detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 14px;
+    margin-top:8px;
+  }
+  .detail-grid .dl-label{
+    font-size:0.68rem;
+    color:var(--ink);
+    opacity:0.6;
+  }
+  .detail-grid .dl-val{
+    font-size:0.86rem;
+    font-weight:600;
+    color:var(--green-deep);
+  }
+  .detail-grid .dl-val.mono{ font-family:'JetBrains Mono',monospace; font-weight:500;}
+  .close-x{
+    float:right;
+    background:none;
+    border:none;
+    font-size:1.1rem;
+    color:var(--ink);
+    opacity:0.5;
+    cursor:pointer;
+  }
+
+  /* Breeding */
+  .pair-select-grid{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    gap:8px;
+    align-items:end;
+  }
+  .mate-quick-input{
+    width:100%;
+    border:1px solid var(--line);
+    background:var(--cream);
+    border-radius:6px;
+    padding:6px 8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.75rem;
+    color:var(--ink);
+    margin-bottom:5px;
+    box-sizing:border-box;
+  }
+  .mate-quick-input:focus{ outline:none; border-color:var(--rust); }
+  .mate-quick-hint{
+    font-size:0.66rem;
+    color:var(--rust-deep);
+    margin-top:2px;
+    display:none;
+  }
+  .mate-quick-hint.show{ display:block; }
+  .pair-x{
+    font-family:'IBM Plex Serif',serif;
+    font-size:1.4rem;
+    color:var(--rust);
+    padding-bottom:6px;
+  }
+  .coi-result{
+    background:var(--green);
+    color:var(--cream);
+    border-radius:10px;
+    padding:16px;
+    margin-top:14px;
+    text-align:center;
+  }
+  .coi-result .coi-badge{
+    font-family:'IBM Plex Serif',serif;
+    font-size:0.85rem;
+    color:var(--tan);
+    letter-spacing:0.3px;
+  }
+  .coi-result .coi-note{
+    font-size:0.78rem;
+    margin-top:6px;
+    opacity:0.85;
+  }
+  .pair-preview{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+  .pair-preview .pv-card{
+    background:var(--cream-deep);
+    border-radius:8px;
+    padding:10px;
+  }
+  .pv-card .pv-role{
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--rust-deep);
+    font-weight:700;
+  }
+  .pv-card .pv-name{ font-weight:700; font-size:0.88rem; margin-top:2px; color:var(--green-deep);}
+  .pv-card .pv-line{ font-size:0.74rem; opacity:0.75; margin-top:4px;}
+
+  /* Notes */
+  .note-card{
+    background:var(--white-card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    display:flex;
+    gap:12px;
+  }
+  .note-date{
+    font-family:'IBM Plex Serif',serif;
+    text-align:center;
+    min-width:52px;
+  }
+  .note-date .nd-day{ font-size:1.3rem; font-weight:700; color:var(--rust); line-height:1;}
+  .note-date .nd-month{ font-size:0.65rem; color:var(--ink); opacity:0.7; text-transform:uppercase;}
+  .note-date .nd-year{ font-size:0.6rem; color:var(--ink); opacity:0.5;}
+  .note-body{ flex:1; }
+  .note-cat{
+    display:inline-block;
+    font-size:0.62rem;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:20px;
+    background:var(--sage);
+    color:var(--white-card);
+    margin-bottom:4px;
+  }
+  .note-cat.show{ background:var(--rust); }
+  .note-cat.appt{ background:var(--green); }
+  .upcoming-when{
+    font-size:0.68rem;
+    font-weight:600;
+    color:var(--rust-deep);
+  }
+  .note-title{ font-weight:700; font-size:0.9rem; color:var(--green-deep);}
+  .note-desc{ font-size:0.8rem; opacity:0.8; margin-top:2px;}
+  .note-del{
+    background:none; border:none; color:var(--ink); opacity:0.35;
+    cursor:pointer; font-size:0.95rem; align-self:flex-start;
+  }
+  .note-star{
+    background:none; border:none; color:#ccc; opacity:0.8;
+    cursor:pointer; font-size:1.1rem; align-self:flex-start;
+    padding:0 2px;
+  }
+  .note-star.starred{ color:var(--rust); }
+  .note-card.starred-card{ border-left-color:var(--rust); border-width:1px 1px 1px 3px; }
+  .upcoming-star{ color:var(--rust); font-size:0.75rem; }
+
+  .loading-msg{ text-align:center; padding:40px 10px; opacity:0.5; font-size:0.85rem;}
+
+  /* ---------- Animal Detail Screen (DigitalBeef-style) ---------- */
+  .dbf-sheet{
+    background:#fff;
+    border:1px solid #c7c7c7;
+    border-radius:6px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .dbf-sheet-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#e9e9e9;
+    padding:8px 12px;
+    border-bottom:1px solid #c7c7c7;
+  }
+  .dbf-sheet-head .dbf-title{
+    font-family:'IBM Plex Serif',serif;
+    font-weight:600;
+    font-size:0.85rem;
+    color:#333;
+  }
+  .dbf-sheet-head .close-x{ opacity:0.6; }
+  .dbf-band{
+    background:var(--green);
+    padding:4px 0;
+  }
+  .dbf-idbar{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    gap:10px;
+    padding:12px;
+    border-bottom:1px solid #dcdcdc;
+  }
+  .dbf-col-title{
+    font-size:0.68rem;
+    font-weight:700;
+    color:#444;
+    text-align:center;
+    border-bottom:1px solid #dcdcdc;
+    padding-bottom:4px;
+    margin-bottom:6px;
+  }
+  .dbf-kv{
+    display:flex;
+    justify-content:space-between;
+    gap:6px;
+    font-size:0.7rem;
+    padding:2px 0;
+  }
+  .dbf-kv .k{ color:#555; }
+  .dbf-kv .v{ font-weight:700; color:#1e1e1e; text-align:right; }
+  .dbf-kv .v.mono{ font-family:'JetBrains Mono',monospace; font-weight:600; }
+  .dbf-photo{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .dbf-photo-box{
+    width:76px;
+    height:76px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    color:#999;
+    font-size:0.55rem;
+    text-align:center;
+    background:#fafafa;
+  }
+  .dbf-photo-box svg{ width:26px; height:26px; margin-bottom:3px; opacity:0.5;}
+  .dbf-photo-img{
+    width:82px;
+    height:82px;
+    object-fit:cover;
+    border-radius:6px;
+    border:1px solid var(--line);
+  }
+  .dbf-subtabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:2px;
+    padding:8px 8px 0 8px;
+    background:#f2f2f2;
+  }
+  .dbf-subtab{
+    flex:0 0 auto;
+    background:#e2e2e2;
+    color:#444;
+    border:1px solid #cfcfcf;
+    border-bottom:none;
+    border-radius:5px 5px 0 0;
+    padding:6px 10px;
+    font-size:0.66rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .dbf-subtab.active{
+    background:var(--green);
+    color:#fff;
+    border-color:var(--green);
+  }
+  .dbf-subcontent{
+    padding:12px;
+    background:#fff;
+    min-height:60px;
+  }
+  .dbf-empty{
+    font-size:0.78rem;
+    color:#888;
+    text-align:center;
+    padding:18px 6px;
+  }
+  .dbf-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.68rem;
+  }
+  .dbf-table th{
+    background:#eef2ee;
+    text-align:left;
+    padding:5px 6px;
+    font-size:0.62rem;
+    color:#444;
+    border:1px solid #ddd;
+  }
+  .dbf-table td{
+    padding:5px 6px;
+    border:1px solid #e4e4e4;
+    color:#222;
+  }
+  .dbf-table-wrap{ overflow-x:auto; }
+  .dbf-total-row td{
+    background:var(--cream-deep);
+    color:var(--green-deep);
+  }
+  .anote-card{
+    background:var(--white-card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--rust);
+    border-radius:6px;
+    padding:8px 10px;
+    margin-bottom:8px;
+  }
+  .anote-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .anote-cat{
+    font-size:0.62rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+    color:var(--rust-deep);
+    background:var(--cream-deep);
+    padding:2px 7px;
+    border-radius:20px;
+  }
+  .anote-date{
+    font-size:0.68rem;
+    color:var(--ink);
+    opacity:0.6;
+    flex:1;
+    text-align:right;
+    margin-right:4px;
+  }
+  .anote-del-btn{
+    background:none;
+    border:none;
+    color:var(--ink);
+    opacity:0.4;
+    font-size:0.9rem;
+    cursor:pointer;
+  }
+  .anote-desc{
+    font-size:0.76rem;
+    color:var(--ink);
+    margin-top:5px;
+    line-height:1.35;
+  }
+
+  /* 3-Generation Pedigree tree (recursive bracket style) */
+  .ped-tree-5{
+    overflow-x:auto;
+    padding-bottom:8px;
+  }
+  .ped-section{ padding:6px 0; }
+  .ped-divider{
+    border-top:1px solid var(--line);
+    margin:16px 0;
+  }
+  .ped-node{
+    display:flex;
+    align-items:center;
+  }
+  .ped-label{
+    flex:0 0 200px;
+    width:200px;
+    padding:3px 6px;
+    margin:2px 0;
+    font-size:0.72rem;
+    line-height:1.2;
+    font-weight:500;
+    color:#1e1e1e;
+    background:none;
+    border:none;
+    white-space:nowrap;
+  }
+  .ped-section > .ped-node > .ped-label{
+    flex:0 0 260px;
+    width:260px;
+    font-size:0.86rem;
+    font-weight:700;
+    color:var(--green-deep);
+    background:none;
+    border:none;
+    white-space:nowrap;
+  }
+  .ped-label.blank{ color:#c2c2c2; font-style:italic; font-weight:400; }
+  .ped-label.ped-common{
+    background:#FFE0B2;
+    color:#8A4B00;
+    font-weight:700;
+    border-radius:4px;
+    padding-left:6px;
+    padding-right:6px;
+  }
+  .coi-result-box{
+    background:var(--green);
+    color:#fff;
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  .coi-result-box .coi-badge{
+    font-family:'IBM Plex Serif',serif;
+    font-size:0.85rem;
+    color:var(--tan);
+  }
+  .coi-result-box .coi-big-value{
+    font-family:'IBM Plex Serif',serif;
+    font-size:1.6rem;
+    font-weight:700;
+    margin-top:4px;
+  }
+  .coi-result-box .coi-note{
+    font-size:0.7rem;
+    opacity:0.85;
+    margin-top:6px;
+  }
+  .mating-ped-section{ margin-bottom:6px; }
+  .mating-ped-label{
+    font-family:'IBM Plex Serif',serif;
+    font-weight:700;
+    font-size:0.8rem;
+    color:var(--green-deep);
+    margin-bottom:4px;
+  }
+  .ped-children{
+    display:flex;
+    flex-direction:column;
+    margin-left:24px;
+    padding-left:24px;
+    position:relative;
+  }
+  /* Pedigree form inputs (editable tree, used in Add/Edit Animal) */
+  .ped-tip{
+    font-size:0.72rem;
+    color:var(--ink);
+    opacity:0.65;
+    margin-bottom:8px;
+    font-style:italic;
+  }
+  .ped-field-pair{
+    display:flex;
+    gap:4px;
+    flex:0 0 auto;
+  }
+  .ped-input{
+    padding:3px 6px;
+    margin:2px 0;
+    font-size:0.72rem;
+    font-family:'Public Sans',sans-serif;
+    color:var(--ink);
+    background:none;
+    border:none;
+    border-bottom:1px dashed var(--line);
+  }
+  .ped-input-reg{ flex:0 0 64px; width:64px; font-family:'JetBrains Mono',monospace; }
+  .ped-input-name{ flex:0 0 150px; width:150px; }
+  .ped-input::placeholder{ color:#bbb; font-style:italic; }
+  .ped-input:focus{ outline:none; border-bottom-color:var(--rust); }
+  .ped-form > .ped-node > .ped-field-pair .ped-input-reg{ flex:0 0 74px; width:74px; font-size:0.82rem; }
+  .ped-form > .ped-node > .ped-field-pair .ped-input-name{
+    flex:0 0 190px;
+    width:190px;
+    font-size:0.82rem;
+    font-weight:700;
+    color:var(--green-deep);
+    border-bottom:1px solid var(--sage);
+  }
+  .ped-conflict-box:empty{ display:none; }
+  .ped-conflict{
+    background:#FFF6E8;
+    border:1px solid var(--rust);
+    border-radius:6px;
+    padding:5px 7px;
+    margin:3px 0;
+    font-size:0.64rem;
+    max-width:260px;
+  }
+  .ped-conflict span{ display:block; margin-bottom:4px; color:var(--rust-deep); font-weight:600; }
+  .ped-conflict-btn{
+    background:#fff;
+    border:1px solid var(--rust);
+    color:var(--rust-deep);
+    border-radius:4px;
+    padding:2px 6px;
+    font-size:0.62rem;
+    margin:2px 3px 2px 0;
+    cursor:pointer;
+  }
+  .dbf-actions{
+    display:flex;
+    gap:8px;
+    padding:0 12px 12px 12px;
+    background:#fff;
+  }
+
+  @media (max-width:400px){
+    .form-grid{ grid-template-columns:1fr; }
+    .detail-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-box">
+    <h1>Aun's Cattle Academy</h1>
+    <div class="auth-sub">HERD HEALTH RECORDS</div>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-mode="login">Log In</button>
+      <button type="button" class="auth-tab" data-mode="signup">Sign Up</button>
+    </div>
+    <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
+    <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password">
+    <button type="button" class="btn rust" id="authSubmitBtn" style="width:100%;margin-top:6px;">Log In</button>
+    <div id="authError" class="auth-error"></div>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+<header class="ledger">
+<div class="brand-bar">
+  <div class="brand">
+    <h1>Aun's Cattle Academy</h1>
+    <span class="sub">HERD HEALTH RECORDS</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="home">Home</button>
+      <button class="tab-btn" data-tab="aca">Animal Herd</button>
+      <button class="tab-btn" data-tab="breeding">Breeding Program</button>
+      <button class="tab-btn" data-tab="notes">Note &amp; Updated</button>
+    </nav>
+    <button type="button" id="logoutBtn" class="btn ghost small">Log Out</button>
+  </div>
+</div>
+</header>
+
+<main>
+  <div class="loading-msg" id="loadingMsg">Loading farm data...</div>
+
+  <!-- HOME -->
+  <section class="panel" id="panel-home">
+    <h2 class="section-title">Search Animal</h2>
+    <div class="search-row">
+      <input id="searchInput" type="text" placeholder="Search by name, PHN, registration number, or breed...">
+      <button id="searchBtn">Search</button>
+    </div>
+    <div id="searchResults"></div>
+
+    <div class="add-fab-row" style="margin-top:14px;"><button class="btn rust small" id="addAnimalHomeBtn">+ Add Animal</button></div>
+
+    <h2 class="section-title">Upcoming</h2>
+    <div id="upcomingList"></div>
+
+    <h2 class="section-title">Herd Overview</h2>
+    <div class="stat-hero">
+      <div class="big" id="totalCount">0</div>
+      <div class="label">Total Head in System</div>
+    </div>
+    <div class="station-grid">
+      <div class="station-card aca">
+        <div class="st-name">ACA Herd</div>
+        <div class="st-count" id="acaCount">0</div>
+        <div id="acaBreedBars"></div>
+      </div>
+      <div class="station-card ext">
+        <div class="st-name">Reference Herd</div>
+        <div class="st-count" id="extCount">0</div>
+        <div id="extBreedBars"></div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Data Backup</h2>
+    <div class="btn-row">
+      <button class="btn ghost small" id="downloadBackupBtn">⬇ Download Backup</button>
+      <button class="btn ghost small" id="importBackupBtn">⬆ Import Backup</button>
+      <input type="file" id="importBackupFile" accept="application/json" style="display:none;">
+    </div>
+    <div id="backupStatus" style="font-size:0.72rem;opacity:0.6;margin-top:6px;"></div>
+  </section>
+
+  <!-- ANIMAL HERD -->
+  <section class="panel" id="panel-aca">
+    <h2 class="section-title">Animal Herd</h2>
+    <div class="search-row" id="acaSearchRow">
+      <input id="animalHerdSearchInput" type="text" placeholder="Search by name, PHN, registration number, or breed...">
+      <button id="animalHerdSearchBtn">Search</button>
+    </div>
+    <div class="add-fab-row" id="acaAddRow" style="margin-top:14px;"><button class="btn rust small" id="addAcaBtn">+ Add Animal</button></div>
+    <div id="acaFormWrap"></div>
+    <div id="acaAccordion"></div>
+  </section>
+
+  <!-- BREEDING -->
+  <section class="panel" id="panel-breeding">
+    <h2 class="section-title">Virtual Mating — Breeding Program</h2>
+    <div class="form-card">
+      <div class="pair-select-grid">
+        <div class="field">
+          <label>Dam</label>
+          <input type="text" id="damQuickSearch" placeholder="Type PHN or REG..." class="mate-quick-input">
+          <div class="mate-quick-hint" id="damQuickHint"></div>
+          <select id="damSelect"></select>
+        </div>
+        <div class="pair-x">×</div>
+        <div class="field">
+          <label>Sire</label>
+          <input type="text" id="sireQuickSearch" placeholder="Type PHN or REG..." class="mate-quick-input">
+          <div class="mate-quick-hint" id="sireQuickHint"></div>
+          <select id="sireSelect"></select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn rust" id="calcCoiBtn">Calculate Inbreeding</button>
+      </div>
+      <div id="pairPreview"></div>
+      <div id="coiResultWrap"></div>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="panel" id="panel-notes">
+    <h2 class="section-title">Notes &amp; Schedule</h2>
+    <div class="add-fab-row"><button class="btn rust small" id="addNoteBtn">+ Add Entry</button></div>
+    <div id="noteFormWrap"></div>
+    <div id="notesList"></div>
+  </section>
+
+  <!-- FULL-PAGE ANIMAL DETAIL -->
+  <section class="panel" id="panel-detail">
+    <div id="detailFullPage"></div>
+  </section>
+</main>
+
+<footer style="border-top:1px solid var(--line); padding:18px 24px; text-align:center; font-size:0.72rem; color:var(--ink); opacity:0.5;">
+  Aun's Cattle Academy — Herd Health Records
+</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-firestore-compat.min.js"></script>
+<script>
+(function(){
+  var firebaseConfig = {
+    apiKey: "AIzaSyCF-uQH3dZZCaE5mnpCSXnRWBF7WMLoMSY",
+    authDomain: "aca-cattle-manager.firebaseapp.com",
+    projectId: "aca-cattle-manager",
+    storageBucket: "aca-cattle-manager.firebasestorage.app",
+    messagingSenderId: "811977447528",
+    appId: "1:811977447528:web:d7ec9b6b32a5add5df43dd",
+    measurementId: "G-239YR52KGT"
+  };
+  try{
+    firebase.initializeApp(firebaseConfig);
+    var authInst = firebase.auth();
+    var dbInst = firebase.firestore();
+    // Wrapper matching the modular-SDK call shapes used throughout the app,
+    // implemented on top of the classic (compat) SDK for broader script-loading compatibility.
+    window.fb = {
+      auth: authInst,
+      db: dbInst,
+      onAuthStateChanged: function(auth, cb){ return auth.onAuthStateChanged(cb); },
+      signInWithEmailAndPassword: function(auth, email, pass){ return auth.signInWithEmailAndPassword(email, pass); },
+      createUserWithEmailAndPassword: function(auth, email, pass){ return auth.createUserWithEmailAndPassword(email, pass); },
+      signOut: function(auth){ return auth.signOut(); },
+      collection: function(db, name){ return db.collection(name); },
+      doc: function(db, collName, id){ return db.collection(collName).doc(id); },
+      setDoc: function(docRef, data){ return docRef.set(data); },
+      deleteDoc: function(docRef){ return docRef.delete(); },
+      onSnapshot: function(collRef, next, err){ return collRef.onSnapshot(next, err); }
+    };
+  }catch(e){ console.error('Firebase init failed', e); }
+  window.dispatchEvent(new Event('firebase-ready'));
+})();
+</script>
+<script>
+(function(){
+  var cattle = [];
+  var notes = [];
+
+  function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+
+  var defaultCattle = [
+    {id:uid('c'), name:'GKM LADY SLUGGER 118/21', phn:'118/21', reg:'904160', intlId:'BRMUSAF0000904160', eid:'', hornPollScur:'Horned', sex:'Cow', breed:'Brahman', color:'Red', dob:'2011-02-12',
+      sire:'MR WINCHESTER MAGNUM 999', dam:'MS CC MISTI 192/6', sireSire:'HK PASSPORT 777', sireDam:'5M MISS MAGNUM MOLLY', damSire:'5M MR. AMERICAN DREAM', damDam:'5M MISS MAGNUM CHERIE',
+      station:'Reference Herd', classification:'Registered', geneticMakeup:'100.0% BR', coi:'28.9%', serviceType:'Embryo Transfer', breeder:'K-C RANCH', owner:'Multiple Owned',
+      progeny:[
+        {dob:'2016-03-30', sex:'ET Cow', reg:'953503', name:'MS 5P 76/16', sire:"TO'S RED ZONE 99/9"},
+        {dob:'2018-03-05', sex:'ET Cow', reg:'1007324', name:'MS CC NEGRO 18/6', sire:"TO'S RED ZONE 99/9"},
+        {dob:'2022-09-24', sex:'ET Cow', reg:'1060724', name:'YZ MS LADY RHINO 10/65', sire:'MR H RED RHINO 765'}
+      ],
+      shows:[
+        {season:'2014', date:'2013-10-17', show:'Arkansas State Fair', division:'SENIOR', placing:2, points:1},
+        {season:'2013', date:'2013-02-11', show:'Dixie National Livestock', division:'JUNIOR', placing:2, points:1},
+        {season:'2013', date:'2012-09-01', show:'Louisiana Sugar Classic', division:'JUNIOR', placing:2, points:1}
+      ]
+    },
+    {id:uid('c'), name:'ACA DUKE 04/23', phn:'04/23', reg:'A10023', intlId:'THAACA0000A10023', eid:'', hornPollScur:'Polled', sex:'Bull', breed:'Brahman', color:'Grey', dob:'2023-03-14',
+      sire:'HK MR AMERICA 61/9', dam:'ACA MISS CHEROKEE 2/20', sireSire:'HK TORGSON 426/4', sireDam:'MISS HK RIO 49/0', damSire:'HK VERNON 42/3', damDam:'HK MISS AMERICA 969/9',
+      station:'ACA', classification:'Registered', geneticMakeup:'100.0% BR', coi:'6.2%', serviceType:'Natural Service', breeder:"Aun's Cattle Academy", owner:"Aun's Cattle Academy",
+      progeny:[], shows:[
+        {season:'2026', date:'2026-03-06', show:'Houston Livestock Show and Rodeo', division:'INTERMEDIATE', placing:4, points:1}
+      ]
+    },
+    {id:uid('c'), name:'ACA BELLE 09/23', phn:'09/23', reg:'A10024', intlId:'THAACA0000A10024', eid:'', hornPollScur:'Horned', sex:'Cow', breed:'Brahman', color:'Red', dob:'2023-05-02',
+      sire:'MR CC ELI 400/1', dam:'ACA DYNASTY 5/19', sireSire:'', sireDam:'', damSire:'', damDam:'',
+      station:'ACA', classification:'Registered', geneticMakeup:'100.0% BR', coi:'', serviceType:'Natural Service', breeder:"Aun's Cattle Academy", owner:"Aun's Cattle Academy",
+      progeny:[], shows:[]
+    },
+    {id:uid('c'), name:'ACA STORM 11/24', phn:'11/24', reg:'A10101', intlId:'THAACA0000A10101', eid:'', hornPollScur:'Polled', sex:'Bull', breed:'Charolais', color:'White', dob:'2024-01-20',
+      sire:'CHAROLAIS MAX 7/2', dam:'ACA CLOVER 3/21', sireSire:'', sireDam:'', damSire:'', damDam:'',
+      station:'ACA', classification:'Registered', geneticMakeup:'100.0% CH', coi:'', serviceType:'Natural Service', breeder:"Aun's Cattle Academy", owner:"Aun's Cattle Academy",
+      progeny:[], shows:[]
+    },
+    {id:uid('c'), name:'ACA PEARL 02/25', phn:'02/25', reg:'A10112', intlId:'THAACA0000A10112', eid:'', hornPollScur:'Polled', sex:'Cow', breed:'Angus', color:'Black', dob:'2025-02-08',
+      sire:'ANGUS TITAN 1/1', dam:'ACA ONYX 6/22', sireSire:'', sireDam:'', damSire:'', damDam:'',
+      station:'ACA', classification:'Registered', geneticMakeup:'100.0% AN', coi:'', serviceType:'Natural Service', breeder:"Aun's Cattle Academy", owner:"Aun's Cattle Academy",
+      progeny:[], shows:[]
+    },
+    {id:uid('c'), name:'EXT WINCHESTER 999', phn:'999/3', reg:'832160', intlId:'BRMUSAF0000832160', eid:'', hornPollScur:'Horned', sex:'Bull', breed:'Brahman', color:'Grey', dob:'2015-06-01',
+      sire:'HK PASSPORT 777', dam:'5M MISS MAGNUM MOLLY 167', sireSire:'', sireDam:'', damSire:'', damDam:'',
+      station:'Reference Herd', classification:'Registered', geneticMakeup:'100.0% BR', coi:'', serviceType:'Natural Service', breeder:'K-C Ranch', owner:'K-C Ranch',
+      progeny:[], shows:[]
+    }
+  ];
+
+  var defaultNotes = [
+    {id:uid('n'), date:'2026-10-17', title:'Ark-La-Miss Fair — ลงทะเบียนแสดงโค', desc:'เตรียมเอกสารและตรวจสุขภาพโคก่อนวันงาน', cat:'show'},
+    {id:uid('n'), date:'2026-11-06', title:'National Peanut Festival', desc:'ส่งโครุ่น Junior เข้าประกวด', cat:'show'},
+    {id:uid('n'), date:'2026-09-20', title:'นัดสัตวแพทย์ตรวจท้อง', desc:'ตรวจ ACA BELLE 09/23 และ ACA PEARL 02/25', cat:'appt'}
+  ];
+
+  var seededDefaults = false;
+  var seededNotesDefaults = false;
+  var firestoreSyncStarted = false;
+
+  function sanitizeForFirestore(obj){
+    // Strip undefined values / functions so Firestore doesn't reject the write
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  async function saveCattle(){
+    var fbx = window.fb;
+    try{
+      for(var i=0;i<cattle.length;i++){
+        var rec = sanitizeForFirestore(cattle[i]);
+        await fbx.setDoc(fbx.doc(fbx.db,'cattle', rec.id), rec);
+      }
+    }catch(e){ console.error('save cattle failed', e); showToast('Changes are showing on screen, but could not be saved to the database right now.'); }
+  }
+  async function deleteCattleDoc(id){
+    var fbx = window.fb;
+    try{ await fbx.deleteDoc(fbx.doc(fbx.db,'cattle', id)); }
+    catch(e){ console.error('delete cattle failed', e); }
+  }
+  async function saveNotes(){
+    var fbx = window.fb;
+    try{
+      for(var i=0;i<notes.length;i++){
+        var rec = sanitizeForFirestore(notes[i]);
+        await fbx.setDoc(fbx.doc(fbx.db,'notes', rec.id), rec);
+      }
+    }catch(e){ console.error('save notes failed', e); showToast('Changes are showing on screen, but could not be saved to the database right now.'); }
+  }
+  async function deleteNoteDoc(id){
+    var fbx = window.fb;
+    try{ await fbx.deleteDoc(fbx.doc(fbx.db,'notes', id)); }
+    catch(e){ console.error('delete note failed', e); }
+  }
+
+  function startFirestoreSync(){
+    var fbx = window.fb;
+    fbx.onSnapshot(fbx.collection(fbx.db,'cattle'), function(snap){
+      cattle = snap.docs.map(function(d){ return d.data(); });
+      if(cattle.length === 0 && !seededDefaults){
+        seededDefaults = true;
+        cattle = defaultCattle.slice();
+        saveCattle();
+      }
+      document.getElementById('loadingMsg').style.display = 'none';
+      document.querySelectorAll('.panel').forEach(function(p){ p.style.display=''; });
+      if(!document.querySelector('.panel.active')) document.getElementById('panel-home').classList.add('active');
+      renderAll();
+    }, function(err){
+      document.getElementById('loadingMsg').style.display = 'none';
+      showToast('Could not connect to the database: ' + err.message);
+    });
+    fbx.onSnapshot(fbx.collection(fbx.db,'notes'), function(snap){
+      notes = snap.docs.map(function(d){ return d.data(); });
+      if(notes.length === 0 && !seededNotesDefaults){
+        seededNotesDefaults = true;
+        notes = defaultNotes.slice();
+        saveNotes();
+      }
+      renderNotes();
+      renderUpcoming();
+    });
+  }
+
+  function initAuth(){
+    var fbx = window.fb;
+    var overlay = document.getElementById('authOverlay');
+    var appRoot = document.getElementById('appRoot');
+    var mode = 'login';
+    document.querySelectorAll('.auth-tab').forEach(function(t){
+      t.addEventListener('click', function(){
+        mode = t.dataset.mode;
+        document.querySelectorAll('.auth-tab').forEach(function(x){ x.classList.remove('active'); });
+        t.classList.add('active');
+        document.getElementById('authSubmitBtn').textContent = mode==='login' ? 'Log In' : 'Sign Up';
+        document.getElementById('authError').textContent = '';
+      });
+    });
+    document.getElementById('authSubmitBtn').addEventListener('click', function(){
+      var email = document.getElementById('authEmail').value.trim();
+      var pass = document.getElementById('authPassword').value;
+      var errEl = document.getElementById('authError');
+      errEl.textContent = '';
+      if(!email || !pass){ errEl.textContent = 'Please enter an email and password.'; return; }
+      var action = mode==='login' ? fbx.signInWithEmailAndPassword : fbx.createUserWithEmailAndPassword;
+      action(fbx.auth, email, pass).catch(function(err){
+        errEl.textContent = (err.message || 'Something went wrong.').replace('Firebase: ','');
+      });
+    });
+    document.getElementById('logoutBtn').addEventListener('click', function(){
+      fbx.signOut(fbx.auth);
+    });
+    fbx.onAuthStateChanged(fbx.auth, function(user){
+      if(user){
+        overlay.style.display = 'none';
+        appRoot.style.display = '';
+        if(!firestoreSyncStarted){ firestoreSyncStarted = true; startFirestoreSync(); }
+      } else {
+        overlay.style.display = 'flex';
+        appRoot.style.display = 'none';
+      }
+    });
+  }
+  var toastTimer = null;
+  function showToast(msg){
+    var el = document.getElementById('appToast');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'appToast';
+      el.style.cssText = 'position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;background:var(--rust-deep);color:#fff;padding:10px 14px;border-radius:8px;font-size:0.78rem;box-shadow:0 4px 14px rgba(0,0,0,0.25);text-align:center;';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.display = 'block';
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.style.display = 'none'; }, 4500);
+  }
+
+  // ---------- TABS ----------
+  function switchToTab(tabId){
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+    var btn = document.querySelector('.tab-btn[data-tab="'+tabId+'"]');
+    if(btn) btn.classList.add('active');
+    var panel = document.getElementById('panel-' + tabId);
+    if(panel) panel.classList.add('active');
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ switchToTab(btn.dataset.tab); });
+  });
+
+  // ---------- HOME / DASHBOARD ----------
+  function renderDashboard(){
+    document.getElementById('totalCount').textContent = cattle.length;
+    var aca = cattle.filter(function(c){ return c.station === 'ACA'; });
+    var ext = cattle.filter(function(c){ return c.station === 'Reference Herd'; });
+    document.getElementById('acaCount').textContent = aca.length;
+    document.getElementById('extCount').textContent = ext.length;
+    document.getElementById('acaBreedBars').innerHTML = breedBarsHtml(aca);
+    document.getElementById('extBreedBars').innerHTML = breedBarsHtml(ext);
+  }
+  function breedBarsHtml(list){
+    if(list.length === 0) return '<div style="font-size:0.72rem;opacity:0.5;">No data</div>';
+    var counts = {};
+    list.forEach(function(c){ counts[c.breed] = (counts[c.breed]||0) + 1; });
+    var max = Math.max.apply(null, Object.values(counts));
+    return Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; }).map(function(breed){
+      var pct = Math.round((counts[breed]/max)*100);
+      return '<div class="breed-bar-row"><div class="bl"><span>'+esc(breed)+'</span><span>'+counts[breed]+'</span></div>' +
+        '<div class="breed-bar-track"><div class="breed-bar-fill" style="width:'+pct+'%"></div></div></div>';
+    }).join('');
+  }
+
+  function esc(s){ return (s||'').toString().replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+
+  function tableHtml(list){
+    return '<div class="roster-table-wrap"><table class="roster-table">' +
+      '<thead><tr><th>PHN</th><th>Name</th><th>Sex</th><th>Breed</th><th>Color</th><th>DOB</th><th>Station</th></tr></thead>' +
+      '<tbody>' + list.map(function(c){
+        var cls = c.station === 'ACA' ? 'aca' : '';
+        return '<tr class="'+cls+'" data-id="'+c.id+'">' +
+          '<td class="rt-phn tag-mono">'+esc(c.phn)+'</td>' +
+          '<td class="rt-name">'+esc(c.name)+'</td>' +
+          '<td>'+esc(c.sex)+'</td>' +
+          '<td>'+esc(c.breed)+'</td>' +
+          '<td>'+esc(c.color)+'</td>' +
+          '<td>'+esc(c.dob)+'</td>' +
+          '<td class="rt-station" style="color:'+(c.station==='ACA'?'var(--rust-deep)':'var(--sage)')+'">'+esc(c.station)+'</td>' +
+        '</tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  document.getElementById('searchInput').addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(); });
+  function doSearch(){
+    var q = document.getElementById('searchInput').value.trim().toLowerCase();
+    var box = document.getElementById('searchResults');
+    if(!q){ box.innerHTML=''; return; }
+    var results = cattle.filter(function(c){
+      return (c.name||'').toLowerCase().indexOf(q)>-1 ||
+             (c.phn||'').toLowerCase().indexOf(q)>-1 ||
+             (c.reg||'').toLowerCase().indexOf(q)>-1 ||
+             (c.breed||'').toLowerCase().indexOf(q)>-1;
+    });
+    if(results.length===0){
+      box.innerHTML = '<div class="empty-note">No matching records found</div>';
+      return;
+    }
+    box.innerHTML = tableHtml(results);
+    box.querySelectorAll('tbody tr').forEach(function(el){
+      el.addEventListener('click', function(){ openDetailPage(el.dataset.id); });
+    });
+  }
+
+  // ---------- ANIMAL HERD TAB ----------
+  var animalHerdQuery = '';
+  var accordionOpen = {ACA:true, 'Reference Herd':true};
+
+  function ageShort(dobStr){
+    var d = new Date(dobStr + 'T00:00:00');
+    if(isNaN(d)) return '—';
+    var now = new Date();
+    var years = now.getFullYear() - d.getFullYear();
+    var months = now.getMonth() - d.getMonth();
+    if(now.getDate() < d.getDate()) months -= 1;
+    if(months < 0){ years -= 1; months += 12; }
+    return years + 'y ' + months + 'm';
+  }
+
+  function animalHerdTableHtml(list){
+    return '<div class="roster-table-wrap"><table class="roster-table">' +
+      '<thead><tr><th>REG</th><th>PHN</th><th>Name</th><th>DOB</th><th>Age</th><th>Breed</th></tr></thead>' +
+      '<tbody>' + list.map(function(c){
+        return '<tr data-id="'+c.id+'">' +
+          '<td class="tag-mono">'+esc(c.reg)+'</td>' +
+          '<td class="rt-phn tag-mono">'+esc(c.phn)+'</td>' +
+          '<td class="rt-name">'+esc(c.name)+'</td>' +
+          '<td>'+esc(c.dob)+'</td>' +
+          '<td>'+ageShort(c.dob)+'</td>' +
+          '<td>'+esc(c.breed)+'</td>' +
+        '</tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  function renderAnimalHerd(){
+    var q = animalHerdQuery.trim().toLowerCase();
+    var groups = [
+      {key:'ACA', label:'ACA Herd'},
+      {key:'Reference Herd', label:'Reference Herd'}
+    ];
+    var html = groups.map(function(g){
+      var list = cattle.filter(function(c){ return c.station === g.key; });
+      if(q){
+        list = list.filter(function(c){
+          return (c.name||'').toLowerCase().indexOf(q)>-1 ||
+                 (c.phn||'').toLowerCase().indexOf(q)>-1 ||
+                 (c.reg||'').toLowerCase().indexOf(q)>-1 ||
+                 (c.breed||'').toLowerCase().indexOf(q)>-1;
+        });
+      }
+      var open = accordionOpen[g.key];
+      return '<div class="accordion-section">' +
+        '<button class="accordion-header" data-station="'+g.key+'">' +
+          '<span>'+g.label+' <span class="acc-count">('+list.length+')</span></span>' +
+          '<span class="acc-chevron">'+(open ? '\u25B2' : '\u25BC')+'</span>' +
+        '</button>' +
+        '<div class="accordion-body" style="display:'+(open ? 'block' : 'none')+'">' +
+          (list.length ? animalHerdTableHtml(list) : '<div class="empty-note">No animals found'+(q ? ' matching your search.' : ' in this station yet.')+'</div>') +
+        '</div>' +
+      '</div>';
+    }).join('');
+    var wrap = document.getElementById('acaAccordion');
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.accordion-header').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var st = btn.dataset.station;
+        accordionOpen[st] = !accordionOpen[st];
+        renderAnimalHerd();
+      });
+    });
+    wrap.querySelectorAll('tbody tr').forEach(function(el){
+      el.addEventListener('click', function(){ openDetailPage(el.dataset.id); });
+    });
+  }
+
+  document.getElementById('animalHerdSearchBtn').addEventListener('click', doAnimalHerdSearch);
+  document.getElementById('animalHerdSearchInput').addEventListener('keydown', function(e){ if(e.key==='Enter') doAnimalHerdSearch(); });
+  function doAnimalHerdSearch(){
+    animalHerdQuery = document.getElementById('animalHerdSearchInput').value;
+    renderAnimalHerd();
+  }
+
+  var DBF_TABS = ['Pedigree','Progeny','Show Results','Breeding','Note'];
+  var dbfActiveTab = 'Pedigree';
+
+  function computeAge(dobStr){
+    var d = new Date(dobStr + 'T00:00:00');
+    if(isNaN(d)) return '—';
+    var now = new Date();
+    var years = now.getFullYear() - d.getFullYear();
+    var months = now.getMonth() - d.getMonth();
+    var days = now.getDate() - d.getDate();
+    if(days < 0){ months -= 1; days += 30; }
+    if(months < 0){ years -= 1; months += 12; }
+    return years + ' years, ' + months + ' months, ' + days + ' days';
+  }
+
+  var previousTabId = 'home';
+
+  function openDetailPage(id){
+    var c = cattle.find(function(x){ return x.id===id; });
+    if(!c) return;
+    var activeBtn = document.querySelector('.tab-btn.active');
+    if(activeBtn) previousTabId = activeBtn.dataset.tab;
+    dbfActiveTab = 'Pedigree';
+    document.getElementById('detailFullPage').innerHTML =
+      '<button class="btn ghost small" id="backToListBtn" style="margin-bottom:14px;">&larr; Back</button>' +
+      renderDbfSheet(c, true);
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('panel-detail').classList.add('active');
+    wireDbfSheet(c, true);
+    document.getElementById('backToListBtn').addEventListener('click', closeDetailPage);
+    window.scrollTo(0,0);
+  }
+  function closeDetailPage(){
+    switchToTab(previousTabId || 'home');
+  }
+
+  function renderDbfSheet(c, allowEdit){
+    return '<div class="dbf-sheet">' +
+      '<div class="dbf-sheet-head"><span class="dbf-title">Animal Detail Screen</span><button class="close-x" id="closeDetail">&times;</button></div>' +
+      '<div class="dbf-band"></div>' +
+      '<div class="dbf-idbar">' +
+        '<div>' +
+          '<div class="dbf-col-title">IDENTIFICATION</div>' +
+          dbfKv('Sex', c.sex) + dbfKv('Name', c.name) + dbfKv('PHN', c.phn, true) +
+          dbfKv('Registration', c.reg, true) + dbfKv('Intl ID', c.intlId, true) +
+          dbfKv('EID', c.eid, true) + dbfKv('Horn/Poll/Scur', c.hornPollScur) + dbfKv('Color', c.color) + dbfKv('Station', c.station) +
+        '</div>' +
+        '<div class="dbf-photo">'+(c.photo ? '<img class="dbf-photo-img" src="'+c.photo+'" alt="'+esc(c.name)+'">' : '<div class="dbf-photo-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-3-3-6 6"/></svg>No Photo Available</div>')+'</div>' +
+        '<div>' +
+          '<div class="dbf-col-title">OTHER DETAILS</div>' +
+          dbfKv('Sire', c.sire) + dbfKv('Dam', c.dam) + dbfKv('Classification', c.classification) +
+          dbfKv('Genetic Makeup', c.geneticMakeup) + dbfKv('COI', c.coi) + dbfKv('Service Type', c.serviceType) +
+          dbfKv('Breeder', c.breeder) + dbfKv('Owner', c.owner) + dbfKv('DOB (Y/M/D)', c.dob) + dbfKv('Age', computeAge(c.dob)) +
+        '</div>' +
+      '</div>' +
+      '<div class="dbf-subtabs">' + DBF_TABS.map(function(t){
+        return '<button class="dbf-subtab'+(t===dbfActiveTab?' active':'')+'" data-tab="'+esc(t)+'">'+esc(t)+'</button>';
+      }).join('') + '</div>' +
+      '<div class="dbf-subcontent" id="dbfSubcontent">' + renderDbfTabContent(c, dbfActiveTab) + '</div>' +
+      (allowEdit ? '<div class="dbf-actions"><button class="btn ghost small" id="editThis">Edit</button><button class="btn rust small" id="delThis">Delete</button></div>' : '') +
+    '</div>';
+  }
+
+  function dbfKv(label, value, mono){
+    return '<div class="dbf-kv"><span class="k">'+esc(label)+'</span><span class="v'+(mono?' mono':'')+'">'+esc(value||'—')+'</span></div>';
+  }
+
+  function renderDbfTabContent(c, tab){
+    if(tab === 'Pedigree'){
+      if(!c.sire && !c.dam) return '<div class="dbf-empty">No pedigree data available</div>';
+      ensurePedigree(c);
+      return '<div class="ped-tree-5">' +
+        '<div class="ped-section">' + renderPedNode5(c.pedigree.sire, 3, 'Sire:  ') + '</div>' +
+        '<div class="ped-divider"></div>' +
+        '<div class="ped-section">' + renderPedNode5(c.pedigree.dam, 3, 'Dam:  ') + '</div>' +
+      '</div>';
+    }
+    if(tab === 'Progeny'){
+      var prog = c.progeny || [];
+      var tableHtml = prog.length ?
+        '<div class="dbf-table-wrap"><table class="dbf-table"><thead><tr><th>DOB</th><th>Sex</th><th>Reg#</th><th>Name</th><th>Sire</th><th></th></tr></thead><tbody>' +
+          prog.map(function(p,i){ return '<tr><td>'+esc(p.dob)+'</td><td>'+esc(p.sex)+'</td><td>'+esc(p.reg)+'</td><td>'+esc(p.name)+'</td><td>'+esc(p.sire)+'</td><td><button type="button" class="progeny-del-btn" data-idx="'+i+'">&times;</button></td></tr>'; }).join('') +
+        '</tbody></table></div>'
+        : '<div class="dbf-empty">No progeny records yet</div>';
+      return tableHtml +
+        '<button type="button" class="btn ghost small" id="addProgenyBtn" style="margin-top:10px;">+ Add Calf</button>' +
+        '<div id="progenyFormWrap"></div>';
+    }
+    if(tab === 'Show Results'){
+      var shows = c.shows || [];
+      var tableHtml;
+      if(shows.length===0){
+        tableHtml = '<div class="dbf-empty">No show history yet</div>';
+      } else {
+        var seasons = {};
+        shows.forEach(function(s, i){
+          var key = s.season || 'Unspecified';
+          if(!seasons[key]) seasons[key] = [];
+          seasons[key].push({ s: s, idx: i });
+        });
+        var seasonKeys = Object.keys(seasons).sort(function(a,b){ return b.localeCompare(a, undefined, {numeric:true}); });
+        var rowsHtml = seasonKeys.map(function(season){
+          var group = seasons[season];
+          var body = group.map(function(item){
+            var s = item.s;
+            return '<tr><td>'+esc(s.date)+'</td><td>'+esc(s.show)+'</td><td>'+esc(s.division)+'</td><td>'+esc(s.showClass)+'</td><td>'+esc(s.placing)+'</td><td>'+esc(s.divisionPlacing)+'</td><td>'+esc(s.championshipPlacing)+'</td><td>'+esc(s.note)+'</td>' +
+              '<td><button type="button" class="show-del-btn" data-idx="'+item.idx+'">&times;</button></td></tr>';
+          }).join('');
+          return '<tr class="dbf-total-row"><td colspan="9" style="font-weight:700;">Season: '+esc(season)+'</td></tr>' + body;
+        }).join('');
+        tableHtml = '<div class="dbf-table-wrap"><table class="dbf-table"><thead><tr><th>Date</th><th>Show</th><th>Division</th><th>Class</th><th>Placing</th><th>Div. Placing</th><th>Champ. Placing</th><th>Note</th><th></th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+      }
+      return tableHtml +
+        '<button type="button" class="btn ghost small" id="addShowBtn" style="margin-top:10px;">+ Add Show Result</button>' +
+        '<div id="showFormWrap"></div>';
+    }
+    if(tab === 'Breeding'){
+      var mates = cattle.filter(function(x){ return x.id!==c.id && x.sex !== c.sex; });
+      if(mates.length===0) return '<div class="dbf-empty">No suitable mate found in the system</div>';
+      return '<div class="field" style="margin-bottom:10px;"><label>Select Mate ('+(c.sex==='Cow'?'Sire':'Dam')+')</label>' +
+        '<input type="text" id="dbfMateQuickSearch" placeholder="Type PHN or REG..." class="mate-quick-input">' +
+        '<div class="mate-quick-hint" id="dbfMateQuickHint"></div>' +
+        '<select id="dbfMateSelect">' +
+        '<option value="">— Select —</option>' +
+        mates.map(function(m){ return '<option value="'+m.id+'">'+esc(m.name)+' ('+esc(m.phn)+')</option>'; }).join('') +
+      '</select></div>' +
+      '<button class="btn rust small" id="dbfCalcBtn">Calculate Inbreeding</button>' +
+      '<div id="dbfMateResult"></div>';
+    }
+    if(tab === 'Note'){
+      var notesArr = c.animalNotes || [];
+      var listHtml = notesArr.length ?
+        notesArr.map(function(n, i){
+          return '<div class="anote-card">' +
+            '<div class="anote-top"><span class="anote-cat">'+esc(n.category)+'</span><span class="anote-date">'+esc(n.date)+'</span>' +
+              '<button type="button" class="anote-del-btn" data-idx="'+i+'">&times;</button></div>' +
+            '<div class="anote-desc">'+esc(n.note)+'</div>' +
+          '</div>';
+        }).join('')
+        : '<div class="dbf-empty">No activity logged yet</div>';
+      return listHtml +
+        '<button type="button" class="btn ghost small" id="addAnimalNoteBtn" style="margin-top:10px;">+ Add Entry</button>' +
+        '<div id="animalNoteFormWrap"></div>';
+    }
+    return '<div class="dbf-empty">No data available for this section</div>';
+  }
+  function ensurePedigree(c){
+    if(!c.pedigree){
+      c.pedigree = {
+        sire: c.sire ? { reg:'', name: c.sire, sire: c.sireSire ? {reg:'',name:c.sireSire} : null, dam: c.sireDam ? {reg:'',name:c.sireDam} : null } : null,
+        dam: c.dam ? { reg:'', name: c.dam, sire: c.damSire ? {reg:'',name:c.damSire} : null, dam: c.damDam ? {reg:'',name:c.damDam} : null } : null
+      };
+    }
+  }
+  function renderPedNode5(node, depth, prefix, highlightSet){
+    var name = (node && node.name) ? node.name : '';
+    var isCommon = !!(highlightSet && node && node.reg && highlightSet[(''+node.reg).trim()]);
+    var label = (prefix || '') + (name ? esc(name) : 'Unlisted');
+    var cls = 'ped-label' + (name?'':' blank') + (isCommon?' ped-common':'');
+    var html = '<div class="ped-node"><div class="'+cls+'" title="'+esc((prefix||'')+(name||'Unlisted'))+'">'+label+'</div>';
+    if(depth > 1){
+      html += '<div class="ped-children">' +
+        renderPedNode5(node ? node.sire : null, depth-1, undefined, highlightSet) +
+        renderPedNode5(node ? node.dam : null, depth-1, undefined, highlightSet) +
+      '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+  function flattenAncestors(node, depth, out){
+    if(!node) return;
+    var reg = node.reg ? (''+node.reg).trim() : '';
+    if(reg) out.push({ reg: reg, depth: depth });
+    flattenAncestors(node.sire, depth+1, out);
+    flattenAncestors(node.dam, depth+1, out);
+  }
+  function computeMatingCOI(sireAnimal, damAnimal){
+    ensurePedigree(sireAnimal);
+    ensurePedigree(damAnimal);
+    var sireList = [];
+    flattenAncestors(sireAnimal.pedigree.sire, 1, sireList);
+    flattenAncestors(sireAnimal.pedigree.dam, 1, sireList);
+    var damList = [];
+    flattenAncestors(damAnimal.pedigree.sire, 1, damList);
+    flattenAncestors(damAnimal.pedigree.dam, 1, damList);
+    var coi = 0;
+    var commonSet = {};
+    sireList.forEach(function(a){
+      damList.forEach(function(b){
+        if(a.reg === b.reg){
+          coi += Math.pow(0.5, a.depth + b.depth + 1);
+          commonSet[a.reg] = true;
+        }
+      });
+    });
+    return { coiPercent: coi * 100, commonSet: commonSet };
+  }
+  function renderMatingPedigree(sireAnimal, damAnimal){
+    var result = computeMatingCOI(sireAnimal, damAnimal);
+    var hasCommon = Object.keys(result.commonSet).length > 0;
+    var html = '<div class="coi-result-box">' +
+      '<div class="coi-badge">'+esc(sireAnimal.name)+' × '+esc(damAnimal.name)+'</div>' +
+      '<div class="coi-big-value">COI: '+result.coiPercent.toFixed(2)+'%</div>' +
+      '<div class="coi-note">Based on the 3-generation pedigree on record for each parent. Highlighted names below appear on both sides.</div>' +
+    '</div>';
+    html += '<div class="mating-ped-section"><div class="mating-ped-label">Sire\u2019s Pedigree \u2014 '+esc(sireAnimal.name)+'</div>' +
+      '<div class="ped-tree-5">' +
+        renderPedNode5(sireAnimal.pedigree.sire, 3, 'Sire:  ', result.commonSet) +
+        '<div class="ped-divider"></div>' +
+        renderPedNode5(sireAnimal.pedigree.dam, 3, 'Dam:  ', result.commonSet) +
+      '</div></div>';
+    html += '<div class="ped-divider" style="border-top:2px solid var(--rust);"></div>';
+    html += '<div class="mating-ped-section"><div class="mating-ped-label">Dam\u2019s Pedigree \u2014 '+esc(damAnimal.name)+'</div>' +
+      '<div class="ped-tree-5">' +
+        renderPedNode5(damAnimal.pedigree.sire, 3, 'Sire:  ', result.commonSet) +
+        '<div class="ped-divider"></div>' +
+        renderPedNode5(damAnimal.pedigree.dam, 3, 'Dam:  ', result.commonSet) +
+      '</div></div>';
+    if(!hasCommon){
+      html += '<div class="dbf-empty" style="margin-top:8px;">No shared ancestors found within the 3 generations on record — COI shown reflects only what the recorded pedigree can detect.</div>';
+    }
+    return html;
+  }
+
+  function wireDbfSheet(c, allowEdit){
+    document.getElementById('closeDetail').addEventListener('click', closeDetailPage);
+    document.querySelectorAll('.dbf-subtab').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        dbfActiveTab = btn.dataset.tab;
+        document.querySelectorAll('.dbf-subtab').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('dbfSubcontent').innerHTML = renderDbfTabContent(c, dbfActiveTab);
+        wireBreedingMiniCalc(c);
+        wireProgenyTab(c);
+        wireShowTab(c);
+        wireAnimalNoteTab(c);
+      });
+    });
+    wireBreedingMiniCalc(c);
+    wireProgenyTab(c);
+    wireShowTab(c);
+    wireAnimalNoteTab(c);
+    if(allowEdit){
+      var delBtn = document.getElementById('delThis');
+      var editBtn = document.getElementById('editThis');
+      if(delBtn) delBtn.addEventListener('click', function(){
+        var deletedId = c.id;
+        cattle = cattle.filter(function(x){ return x.id!==deletedId; });
+        deleteCattleDoc(deletedId).then(function(){ renderAll(); closeDetailPage(); });
+      });
+      if(editBtn) editBtn.addEventListener('click', function(){
+        switchToTab('aca');
+        openAcaForm(c);
+      });
+    }
+  }
+  function wireAnimalNoteTab(c){
+    var addBtn = document.getElementById('addAnimalNoteBtn');
+    if(!addBtn) return;
+    addBtn.addEventListener('click', function(){ openAnimalNoteForm(c); });
+    document.querySelectorAll('.anote-del-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var idx = parseInt(btn.dataset.idx, 10);
+        c.animalNotes.splice(idx, 1);
+        saveCattle().then(function(){
+          document.getElementById('dbfSubcontent').innerHTML = renderDbfTabContent(c, 'Note');
+          wireAnimalNoteTab(c);
+        });
+      });
+    });
+  }
+  function openAnimalNoteForm(c){
+    var wrap = document.getElementById('animalNoteFormWrap');
+    wrap.innerHTML = '<div class="form-card" style="margin-top:8px;">' +
+      '<div class="form-grid">' +
+        formField('Date (Y/M/D)','an-date','') +
+        selectField('Category','an-cat',['Vaccination','Treatment','Injection','Hoof Trimming','Deworming','Checkup','Other'],'Vaccination') +
+        '<div class="field full" id="an-other-wrap" style="display:none;">' +
+          '<label>Please specify</label><input id="an-cat-other" type="text" placeholder="e.g. Dehorning, Weighing, Branding...">' +
+        '</div>' +
+        '<div class="field full"><label>Note</label><textarea id="an-note"></textarea></div>' +
+      '</div>' +
+      '<div class="btn-row"><button type="button" class="btn rust small" id="saveAnimalNoteBtn">Save</button><button type="button" class="btn ghost small" id="cancelAnimalNoteBtn">Cancel</button></div>' +
+    '</div>';
+    var catSelect = document.getElementById('an-cat');
+    var otherWrap = document.getElementById('an-other-wrap');
+    catSelect.addEventListener('change', function(){
+      otherWrap.style.display = (catSelect.value === 'Other') ? '' : 'none';
+    });
+    document.getElementById('cancelAnimalNoteBtn').addEventListener('click', function(){ wrap.innerHTML=''; });
+    document.getElementById('saveAnimalNoteBtn').addEventListener('click', function(){
+      var catVal = document.getElementById('an-cat').value;
+      var otherText = val('an-cat-other');
+      var displayCat = (catVal === 'Other' && otherText) ? otherText : catVal;
+      var entry = { date: val('an-date'), category: displayCat, note: val('an-note') };
+      if(!entry.date){ alert('Please enter a date'); return; }
+      if(!c.animalNotes) c.animalNotes = [];
+      c.animalNotes.push(entry);
+      saveCattle().then(function(){
+        document.getElementById('dbfSubcontent').innerHTML = renderDbfTabContent(c, 'Note');
+        wireAnimalNoteTab(c);
+      });
+    });
+  }
+  function wireShowTab(c){
+    var addBtn = document.getElementById('addShowBtn');
+    if(!addBtn) return;
+    addBtn.addEventListener('click', function(){ openShowForm(c); });
+    document.querySelectorAll('.show-del-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var idx = parseInt(btn.dataset.idx, 10);
+        c.shows.splice(idx, 1);
+        saveCattle().then(function(){
+          document.getElementById('dbfSubcontent').innerHTML = renderDbfTabContent(c, 'Show Results');
+          wireShowTab(c);
+          renderAll();
+        });
+      });
+    });
+  }
+  function openShowForm(c){
+    var wrap = document.getElementById('showFormWrap');
+    wrap.innerHTML = '<div class="form-card" style="margin-top:8px;">' +
+      '<div class="form-grid">' +
+        formField('Season','sh-season','') +
+        formField('Date','sh-date','') +
+        formField('Show Name','sh-show','') +
+        formField('Division','sh-division','') +
+        formField('Class','sh-class','') +
+        formField('Placing','sh-placing','') +
+        formField('Division Placing','sh-divplacing','') +
+        formField('Championship Placing','sh-champplacing','') +
+        '<div class="field full"><label>Note</label><textarea id="sh-note"></textarea></div>' +
+      '</div>' +
+      '<div class="btn-row"><button type="button" class="btn rust small" id="saveShowBtn">Save</button><button type="button" class="btn ghost small" id="cancelShowBtn">Cancel</button></div>' +
+    '</div>';
+    document.getElementById('cancelShowBtn').addEventListener('click', function(){ wrap.innerHTML=''; });
+    document.getElementById('saveShowBtn').addEventListener('click', function(){
+      var entry = {
+        season: val('sh-season'), date: val('sh-date'), show: val('sh-show'), division: val('sh-division'),
+        showClass: val('sh-class'), placing: val('sh-placing'), divisionPlacing: val('sh-divplacing'),
+        championshipPlacing: val('sh-champplacing'), note: val('sh-note')
+      };
+      if(!entry.show){ alert('Please enter the show name'); return; }
+      if(!c.shows) c.shows = [];
+      c.shows.push(entry);
+      saveCattle().then(function(){
+        document.getElementById('dbfSubcontent').innerHTML = renderDbfTabContent(c, 'Show Results');
+        wireShowTab(c);
+        renderAll();
+      });
+    });
+  }
+  function wireProgenyTab(c){
+    var addBtn = document.getElementById('addProgenyBtn');
+    if(!addBtn) return;
+    addBtn.addEventListener('click', function(){ openProgenyForm(c); });
+    document.querySelectorAll('.progeny-del-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var idx = parseInt(btn.dataset.idx, 10);
+        c.progeny.splice(idx, 1);
+        saveCattle().then(function(){
+          document.getElementById('dbfSubcontent').innerHTML = renderDbfTabContent(c, 'Progeny');
+          wireProgenyTab(c);
+          renderAll();
+        });
+      });
+    });
+  }
+  function openProgenyForm(c){
+    var wrap = document.getElementById('progenyFormWrap');
+    wrap.innerHTML = '<div class="form-card" style="margin-top:8px;">' +
+      '<div class="form-grid">' +
+        formField('DOB (Y/M/D)','pg-dob','') +
+        selectField('Sex','pg-sex',['Cow','Bull','ET Cow','ET Bull'],'Cow') +
+        formField('Reg#','pg-reg','') +
+        formField('Name','pg-name','') +
+        '<div class="field"><label>Sire</label>' +
+          '<div class="ped-field-pair">' +
+            '<input class="ped-input ped-input-reg" id="pg-sire-reg" type="text" placeholder="REG">' +
+            '<input class="ped-input ped-input-name" id="pg-sire" type="text" placeholder="Sire name">' +
+          '</div>' +
+          '<div class="ped-conflict-box" id="pg-sire-conflict"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="btn-row"><button type="button" class="btn rust small" id="saveProgenyBtn">Save</button><button type="button" class="btn ghost small" id="cancelProgenyBtn">Cancel</button></div>' +
+    '</div>';
+    document.getElementById('pg-sire-reg').addEventListener('blur', function(){
+      var reg = this.value.trim();
+      var nameInput = document.getElementById('pg-sire');
+      var conflictBox = document.getElementById('pg-sire-conflict');
+      conflictBox.innerHTML = '';
+      if(!reg) return;
+      var registry = buildAncestorRegistry();
+      var matches = registry[reg];
+      if(!matches || matches.length===0) return;
+      if(matches.length===1){
+        nameInput.value = matches[0];
+      } else {
+        conflictBox.innerHTML = '<div class="ped-conflict"><span>REG นี้เคยถูกบันทึกหลายชื่อ — เลือก:</span> ' +
+          matches.map(function(m){ return '<button type="button" class="ped-conflict-btn" data-name="'+esc(m)+'">'+esc(m)+'</button>'; }).join(' ') +
+        '</div>';
+        conflictBox.querySelectorAll('.ped-conflict-btn').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            nameInput.value = btn.dataset.name;
+            conflictBox.innerHTML = '';
+          });
+        });
+      }
+    });
+    document.getElementById('cancelProgenyBtn').addEventListener('click', function(){ wrap.innerHTML=''; });
+    document.getElementById('saveProgenyBtn').addEventListener('click', function(){
+      var entry = { dob: val('pg-dob'), sex: document.getElementById('pg-sex').value, reg: val('pg-reg'), name: val('pg-name'), sireReg: val('pg-sire-reg'), sire: val('pg-sire') };
+      if(!entry.name){ alert('Please enter the calf name'); return; }
+      if(!c.progeny) c.progeny = [];
+      c.progeny.push(entry);
+      saveCattle().then(function(){
+        document.getElementById('dbfSubcontent').innerHTML = renderDbfTabContent(c, 'Progeny');
+        wireProgenyTab(c);
+        renderAll();
+      });
+    });
+  }
+  function wireBreedingMiniCalc(c){
+    var btn = document.getElementById('dbfCalcBtn');
+    if(!btn) return;
+    var quickInput = document.getElementById('dbfMateQuickSearch');
+    var quickHint = document.getElementById('dbfMateQuickHint');
+    var mateSelect = document.getElementById('dbfMateSelect');
+    if(quickInput){
+      quickInput.addEventListener('input', function(){
+        var pool = cattle.filter(function(x){ return x.id!==c.id && x.sex !== c.sex; });
+        var q = quickInput.value.trim().toLowerCase();
+        if(!q){ quickHint.classList.remove('show'); quickHint.textContent=''; return; }
+        var matches = pool.filter(function(x){ return (x.phn||'').toLowerCase()===q || (x.reg||'').toLowerCase()===q; });
+        if(matches.length===0){
+          matches = pool.filter(function(x){ return (x.phn||'').toLowerCase().indexOf(q)>-1 || (x.reg||'').toLowerCase().indexOf(q)>-1; });
+        }
+        quickHint.classList.add('show');
+        if(matches.length===1){
+          mateSelect.value = matches[0].id;
+          quickHint.textContent = '✓ ' + matches[0].name + ' (' + matches[0].phn + ')';
+        } else if(matches.length>1){
+          quickHint.textContent = matches.length + ' matches — keep typing to narrow down';
+        } else {
+          quickHint.textContent = 'No animal found with that PHN/REG';
+        }
+      });
+    }
+    btn.addEventListener('click', function(){
+      var mateId = document.getElementById('dbfMateSelect').value;
+      var out = document.getElementById('dbfMateResult');
+      if(!mateId){ out.innerHTML = '<div class="dbf-empty">Please select a mate</div>'; return; }
+      var mate = cattle.find(function(x){ return x.id===mateId; });
+      var sireAnimal = c.sex === 'Bull' ? c : mate;
+      var damAnimal = c.sex === 'Cow' ? c : mate;
+      out.innerHTML = renderMatingPedigree(sireAnimal, damAnimal);
+    });
+  }
+
+  document.getElementById('addAcaBtn').addEventListener('click', function(){ openAcaForm(null); });
+  document.getElementById('addAnimalHomeBtn').addEventListener('click', function(){ switchToTab('aca'); openAcaForm(null); });
+  function hideAcaListChrome(){
+    var sr = document.getElementById('acaSearchRow'); if(sr) sr.style.display = 'none';
+    var ar = document.getElementById('acaAddRow'); if(ar) ar.style.display = 'none';
+    var acc = document.getElementById('acaAccordion'); if(acc) acc.style.display = 'none';
+  }
+  function showAcaListChrome(){
+    var sr = document.getElementById('acaSearchRow'); if(sr) sr.style.display = '';
+    var ar = document.getElementById('acaAddRow'); if(ar) ar.style.display = '';
+    var acc = document.getElementById('acaAccordion'); if(acc) acc.style.display = '';
+  }
+  function resizeImageFile(file, maxDim, callback){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        var w = Math.max(1, Math.round(img.width * scale));
+        var h = Math.max(1, Math.round(img.height * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        callback(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function openAcaForm(existing){
+    hideAcaListChrome();
+    var wrap = document.getElementById('acaFormWrap');
+    var c = existing || {name:'',phn:'',reg:'',intlId:'',eid:'',hornPollScur:'Horned',sex:'Cow',breed:'',color:'',dob:'',
+      sire:'',dam:'',sireSire:'',sireDam:'',damSire:'',damDam:'',
+      geneticMakeup:'',coi:'',serviceType:'Natural Service',breeder:"Aun's Cattle Academy",owner:"Aun's Cattle Academy",classification:'Registered'};
+    if(existing) ensurePedigree(existing);
+    var getPedNode = existing ? function(path){ return getPedNodeByPath(existing, path); } : function(){ return {reg:'',name:''}; };
+    pedFormPaths = [];
+    wrap.innerHTML = '<div class="form-card">' +
+      '<div class="field full" style="margin-bottom:12px;">' +
+        '<label>Photo</label>' +
+        '<div class="photo-upload-row">' +
+          '<div id="f-photo-preview" class="photo-preview-box">' + (c.photo ? '<img src="'+c.photo+'" alt="preview">' : 'No Photo') + '</div>' +
+          '<div>' +
+            '<input type="file" id="f-photo-file" accept="image/*">' +
+            (c.photo ? '<button type="button" class="btn ghost small" id="f-photo-remove" style="margin-top:6px;">Remove Photo</button>' : '') +
+            '<div class="ped-tip" style="margin:4px 0 0 0;">Photos are resized automatically to keep file size small.</div>' +
+          '</div>' +
+        '</div>' +
+        '<input type="hidden" id="f-photo-data" value="'+esc(c.photo||'')+'">' +
+      '</div>' +
+      '<div class="form-grid">' +
+        formField('Name','f-name',c.name) +
+        formField('PHN','f-phn',c.phn) +
+        formField('Registration Number','f-reg',c.reg) +
+        formField('International ID','f-intlId',c.intlId) +
+        formField('EID','f-eid',c.eid) +
+        selectField('Sex','f-sex',['Cow','Bull'],c.sex) +
+        '<div class="field"><label>Station</label><select id="f-station">' +
+          '<option value="ACA"'+((c.station||'ACA')==='ACA'?' selected':'')+'>ACA Herd</option>' +
+          '<option value="Reference Herd"'+(c.station==='Reference Herd'?' selected':'')+'>Reference Herd</option>' +
+        '</select></div>' +
+        formField('Breed','f-breed',c.breed) +
+        formField('Color','f-color',c.color) +
+        selectField('Horn/Poll/Scur','f-horn',['Horned','Polled','Scur'],c.hornPollScur) +
+        formField('Date of Birth (Y/M/D)','f-dob',c.dob) +
+        formField('Genetic Makeup','f-genmake',c.geneticMakeup) +
+        selectField('Service Type','f-svc',['Natural Service','Artificial Insemination','Embryo Transfer'],c.serviceType) +
+        formField('Breeder','f-breeder',c.breeder) +
+        formField('Owner','f-owner',c.owner) +
+      '</div>' +
+      '<div class="section-title" style="font-size:0.95rem;margin:16px 0 8px 0;">3-Generation Pedigree</div>' +
+      '<div class="ped-tip">Type a REG number and tab/click away — if that animal was recorded before, its name fills in automatically.</div>' +
+      '<div class="ped-tree-5 ped-form">' +
+        buildPedFormTree('sire', 'Sire', getPedNode) +
+        '<div class="ped-divider"></div>' +
+        buildPedFormTree('dam', 'Dam', getPedNode) +
+      '</div>' +
+      '<div class="btn-row"><button class="btn rust" id="saveAcaForm">Save</button><button class="btn ghost" id="cancelAcaForm">Cancel</button></div>' +
+    '</div>';
+    pedFormPaths.forEach(wirePedRegAutocomplete);
+    document.getElementById('f-photo-file').addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      resizeImageFile(file, 480, function(dataUrl){
+        document.getElementById('f-photo-data').value = dataUrl;
+        document.getElementById('f-photo-preview').innerHTML = '<img src="'+dataUrl+'" alt="preview">';
+      });
+    });
+    var photoRemoveBtn = document.getElementById('f-photo-remove');
+    if(photoRemoveBtn){
+      photoRemoveBtn.addEventListener('click', function(){
+        document.getElementById('f-photo-data').value = '';
+        document.getElementById('f-photo-preview').innerHTML = 'No Photo';
+        photoRemoveBtn.style.display = 'none';
+      });
+    }
+    document.getElementById('cancelAcaForm').addEventListener('click', function(){ wrap.innerHTML=''; showAcaListChrome(); });
+    document.getElementById('saveAcaForm').addEventListener('click', function(){
+      var pedSire = readPedFormNode('sire', 1);
+      var pedDam = readPedFormNode('dam', 1);
+      var rec = {
+        id: existing ? existing.id : uid('c'),
+        name: val('f-name'), phn: val('f-phn'), reg: val('f-reg'), intlId: val('f-intlId'), eid: val('f-eid'),
+        sex: val('f-sex'), breed: val('f-breed'), color: val('f-color'), hornPollScur: document.getElementById('f-horn').value,
+        dob: val('f-dob'),
+        photo: val('f-photo-data'),
+        sire: pedSire.name, dam: pedDam.name,
+        sireSire: pedSire.sire ? pedSire.sire.name : '', sireDam: pedSire.dam ? pedSire.dam.name : '',
+        damSire: pedDam.sire ? pedDam.sire.name : '', damDam: pedDam.dam ? pedDam.dam.name : '',
+        pedigree: { sire: pedSire, dam: pedDam },
+        geneticMakeup: val('f-genmake'), coi: (existing ? existing.coi : ''), serviceType: document.getElementById('f-svc').value,
+        breeder: val('f-breeder'), owner: val('f-owner'),
+        station: document.getElementById('f-station').value, classification: c.classification || 'Registered',
+        progeny: existing ? (existing.progeny || []) : [],
+        shows: existing ? (existing.shows || []) : []
+      };
+      if(!rec.name){ alert('Please enter an animal name'); return; }
+      if(existing){
+        cattle = cattle.map(function(x){ return x.id===existing.id ? rec : x; });
+      } else {
+        cattle.push(rec);
+      }
+      saveCattle().then(function(){ wrap.innerHTML=''; showAcaListChrome(); renderAll(); });
+    });
+  }
+  function getPedNodeByPath(c, path){
+    if(!c.pedigree) ensurePedigree(c);
+    var parts = path.split('.');
+    var node = c.pedigree;
+    for(var i=0;i<parts.length;i++){
+      if(!node) return {reg:'', name:''};
+      node = node[parts[i]];
+    }
+    return node ? {reg: node.reg||'', name: node.name||''} : {reg:'', name:''};
+  }
+  function buildAncestorRegistry(){
+    var registry = {};
+    function addEntry(reg, name){
+      if(!reg || !name) return;
+      reg = (''+reg).trim(); name = (''+name).trim();
+      if(!reg || !name) return;
+      if(!registry[reg]) registry[reg] = [];
+      if(registry[reg].indexOf(name) === -1) registry[reg].push(name);
+    }
+    function walk(node){
+      if(!node) return;
+      addEntry(node.reg, node.name);
+      walk(node.sire); walk(node.dam);
+    }
+    cattle.forEach(function(c){
+      addEntry(c.reg, c.name);
+      if(c.pedigree){ walk(c.pedigree.sire); walk(c.pedigree.dam); }
+      if(c.progeny){
+        c.progeny.forEach(function(p){
+          addEntry(p.reg, p.name);
+          addEntry(p.sireReg, p.sire);
+        });
+      }
+    });
+    return registry;
+  }
+  var pedFormPaths = [];
+  function buildPedFormTree(rootPath, roleLabel, getNodeFn){
+    function node(path, level){
+      pedFormPaths.push(path);
+      var v = getNodeFn(path);
+      var idSafe = path.replace(/\./g,'-');
+      var placeholder = level===1 ? roleLabel : (path.split('.').pop()==='sire' ? 'Sire' : 'Dam');
+      var html = '<div class="ped-node">' +
+        '<div class="ped-field-pair">' +
+          '<input class="ped-input ped-input-reg" id="pf-reg-'+idSafe+'" data-path="'+path+'" type="text" placeholder="REG" value="'+esc(v.reg)+'">' +
+          '<input class="ped-input ped-input-name" id="pf-'+idSafe+'" data-path="'+path+'" type="text" placeholder="'+esc(placeholder)+'" value="'+esc(v.name)+'">' +
+        '</div>' +
+        '<div class="ped-conflict-box" id="pf-conflict-'+idSafe+'"></div>';
+      if(level<3){
+        html += '<div class="ped-children">' + node(path+'.sire', level+1) + node(path+'.dam', level+1) + '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
+    return node(rootPath, 1);
+  }
+  function wirePedRegAutocomplete(path){
+    var idSafe = path.replace(/\./g,'-');
+    var regInput = document.getElementById('pf-reg-'+idSafe);
+    var nameInput = document.getElementById('pf-'+idSafe);
+    var conflictBox = document.getElementById('pf-conflict-'+idSafe);
+    if(!regInput || !nameInput || !conflictBox) return;
+    regInput.addEventListener('blur', function(){
+      var reg = regInput.value.trim();
+      conflictBox.innerHTML = '';
+      if(!reg) return;
+      var registry = buildAncestorRegistry();
+      var matches = registry[reg];
+      if(!matches || matches.length===0) return;
+      if(matches.length===1){
+        nameInput.value = matches[0];
+      } else {
+        conflictBox.innerHTML = '<div class="ped-conflict"><span>REG นี้เคยถูกบันทึกหลายชื่อ — เลือก:</span> ' +
+          matches.map(function(m){ return '<button type="button" class="ped-conflict-btn" data-name="'+esc(m)+'">'+esc(m)+'</button>'; }).join(' ') +
+        '</div>';
+        conflictBox.querySelectorAll('.ped-conflict-btn').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            nameInput.value = btn.dataset.name;
+            conflictBox.innerHTML = '';
+          });
+        });
+      }
+    });
+  }
+  function readPedFormNode(path, level){
+    var idSafe = path.replace(/\./g,'-');
+    var regEl = document.getElementById('pf-reg-'+idSafe);
+    var nameEl = document.getElementById('pf-'+idSafe);
+    var n = { reg: regEl ? regEl.value.trim() : '', name: nameEl ? nameEl.value.trim() : '', sire: null, dam: null };
+    if(level<3){
+      n.sire = readPedFormNode(path+'.sire', level+1);
+      n.dam = readPedFormNode(path+'.dam', level+1);
+    }
+    return n;
+  }
+  function formField(label,id,value){
+    return '<div class="field"><label>'+esc(label)+'</label><input id="'+id+'" type="text" value="'+esc(value)+'"></div>';
+  }
+  function selectField(label,id,options,selected){
+    return '<div class="field"><label>'+esc(label)+'</label><select id="'+id+'">' +
+      options.map(function(o){ return '<option value="'+o+'"'+(o===selected?' selected':'')+'>'+o+'</option>'; }).join('') +
+    '</select></div>';
+  }
+  function val(id){ return document.getElementById(id).value.trim(); }
+
+  // ---------- BREEDING ----------
+  function renderBreedingSelects(){
+    var dams = cattle.filter(function(c){ return c.sex==='Cow'; });
+    var sires = cattle.filter(function(c){ return c.sex==='Bull'; });
+    var damSel = document.getElementById('damSelect');
+    var sireSel = document.getElementById('sireSelect');
+    damSel.innerHTML = '<option value="">— Select Dam —</option>' + dams.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+' ('+esc(c.phn)+')</option>'; }).join('');
+    sireSel.innerHTML = '<option value="">— Select Sire —</option>' + sires.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+' ('+esc(c.phn)+')</option>'; }).join('');
+    wireMateQuickSearch('damQuickSearch', 'damQuickHint', damSel, 'Cow');
+    wireMateQuickSearch('sireQuickSearch', 'sireQuickHint', sireSel, 'Bull');
+  }
+  function wireMateQuickSearch(inputId, hintId, selectEl, sexFilter){
+    var input = document.getElementById(inputId);
+    var hint = document.getElementById(hintId);
+    if(!input) return;
+    if(!input.dataset.wired){
+      input.dataset.wired = '1';
+      input.addEventListener('input', function(){ updateMateQuickSearch(input, hint, selectEl, sexFilter); });
+    }
+    updateMateQuickSearch(input, hint, selectEl, sexFilter);
+  }
+  function updateMateQuickSearch(input, hint, selectEl, sexFilter){
+    var pool = cattle.filter(function(c){ return c.sex === sexFilter; });
+    var q = input.value.trim().toLowerCase();
+    if(!q){ hint.classList.remove('show'); hint.textContent=''; return; }
+    var matches = pool.filter(function(c){
+      return (c.phn||'').toLowerCase() === q || (c.reg||'').toLowerCase() === q;
+    });
+    if(matches.length === 0){
+      matches = pool.filter(function(c){
+        return (c.phn||'').toLowerCase().indexOf(q) > -1 || (c.reg||'').toLowerCase().indexOf(q) > -1;
+      });
+    }
+    hint.classList.add('show');
+    if(matches.length === 1){
+      selectEl.value = matches[0].id;
+      hint.textContent = '✓ ' + matches[0].name + ' (' + matches[0].phn + ')';
+    } else if(matches.length > 1){
+      hint.textContent = matches.length + ' matches — keep typing to narrow down';
+    } else {
+      hint.textContent = 'No animal found with that PHN/REG';
+    }
+  }
+  document.getElementById('calcCoiBtn').addEventListener('click', function(){
+    var damId = document.getElementById('damSelect').value;
+    var sireId = document.getElementById('sireSelect').value;
+    var preview = document.getElementById('pairPreview');
+    var result = document.getElementById('coiResultWrap');
+    if(!damId || !sireId){
+      preview.innerHTML=''; result.innerHTML = '<div class="empty-note">Please select both a dam and a sire</div>';
+      return;
+    }
+    var dam = cattle.find(function(c){ return c.id===damId; });
+    var sire = cattle.find(function(c){ return c.id===sireId; });
+    preview.innerHTML = '<div class="pair-preview">' +
+      '<div class="pv-card" data-id="'+dam.id+'" style="cursor:pointer;"><div class="pv-role">Dam</div><div class="pv-name">'+esc(dam.name)+'</div><div class="pv-line">Breed: '+esc(dam.breed)+'</div><div class="pv-line">Sire/Dam: '+esc(dam.sire||'—')+' / '+esc(dam.dam||'—')+'</div></div>' +
+      '<div class="pv-card" data-id="'+sire.id+'" style="cursor:pointer;"><div class="pv-role">Sire</div><div class="pv-name">'+esc(sire.name)+'</div><div class="pv-line">Breed: '+esc(sire.breed)+'</div><div class="pv-line">Sire/Dam: '+esc(sire.sire||'—')+' / '+esc(sire.dam||'—')+'</div></div>' +
+    '</div>';
+    preview.querySelectorAll('.pv-card').forEach(function(el){
+      el.addEventListener('click', function(){ openDetailPage(el.dataset.id); });
+    });
+    result.innerHTML = renderMatingPedigree(sire, dam);
+  });
+
+  // ---------- UPCOMING (Home widget) ----------
+  function renderUpcoming(){
+    var box = document.getElementById('upcomingList');
+    if(!box) return;
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var starred = notes.filter(function(n){ return n.starred; })
+      .sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    var starredIds = {};
+    starred.forEach(function(n){ starredIds[n.id] = true; });
+    var soon = notes.filter(function(n){
+      var d = new Date(n.date + 'T00:00:00');
+      return !starredIds[n.id] && !isNaN(d) && d >= today;
+    }).sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    var upcoming = starred.concat(soon).slice(0, 4);
+    if(upcoming.length === 0){
+      box.innerHTML = '<div class="empty-note">Nothing coming up — add a show date or appointment in Note &amp; Updated.</div>';
+      return;
+    }
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    box.innerHTML = upcoming.map(function(n){
+      var d = new Date(n.date + 'T00:00:00');
+      var daysLeft = Math.round((d - today) / 86400000);
+      var whenLabel = isNaN(d) ? '' : (daysLeft === 0 ? 'Today' : (daysLeft === 1 ? 'Tomorrow' : (daysLeft > 0 ? 'In ' + daysLeft + ' days' : daysLeft + ' days ago')));
+      var catLabel = n.cat==='show' ? 'Show' : (n.cat==='appt' ? 'Appointment' : 'General');
+      return '<div class="note-card'+(n.starred?' starred-card':'')+'">' +
+        '<div class="note-date"><div class="nd-day">'+(isNaN(d)?'--':d.getDate())+'</div><div class="nd-month">'+(isNaN(d)?'':months[d.getMonth()])+'</div><div class="nd-year">'+(isNaN(d)?'':d.getFullYear())+'</div></div>' +
+        '<div class="note-body">' +
+          (n.starred ? '<span class="upcoming-star">\u2605</span> ' : '') +
+          '<span class="note-cat '+esc(n.cat)+'">'+catLabel+'</span> <span class="upcoming-when">'+whenLabel+'</span>' +
+          '<div class="note-title">'+esc(n.title)+'</div>' +
+          '<div class="note-desc">'+esc(n.desc)+'</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+    '<button type="button" class="btn ghost small" id="viewAllNotesBtn" style="margin-top:4px;">View all in Note &amp; Updated</button>';
+    var viewAllBtn = document.getElementById('viewAllNotesBtn');
+    if(viewAllBtn) viewAllBtn.addEventListener('click', function(){ switchToTab('notes'); });
+  }
+
+  // ---------- NOTES ----------
+  function renderNotes(){
+    var box = document.getElementById('notesList');
+    if(notes.length===0){ box.innerHTML = '<div class="empty-note">No entries yet</div>'; return; }
+    var sorted = notes.slice().sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    box.innerHTML = sorted.map(function(n){
+      var d = new Date(n.date + 'T00:00:00');
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var day = isNaN(d) ? '--' : d.getDate();
+      var month = isNaN(d) ? '' : months[d.getMonth()];
+      var year = isNaN(d) ? '' : d.getFullYear();
+      var catLabel = n.cat==='show' ? 'Show' : (n.cat==='appt' ? 'Appointment' : 'General');
+      return '<div class="note-card" data-id="'+n.id+'">' +
+        '<div class="note-date"><div class="nd-day">'+day+'</div><div class="nd-month">'+month+'</div><div class="nd-year">'+year+'</div></div>' +
+        '<div class="note-body">' +
+          '<span class="note-cat '+esc(n.cat)+'">'+catLabel+'</span>' +
+          '<div class="note-title">'+esc(n.title)+'</div>' +
+          '<div class="note-desc">'+esc(n.desc)+'</div>' +
+        '</div>' +
+        '<button class="note-star'+(n.starred?' starred':'')+'" data-id="'+n.id+'" title="Mark important">'+(n.starred?'\u2605':'\u2606')+'</button>' +
+        '<button class="note-del" data-id="'+n.id+'">&times;</button>' +
+      '</div>';
+    }).join('');
+    box.querySelectorAll('.note-del').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.dataset.id;
+        notes = notes.filter(function(n){ return n.id!==id; });
+        deleteNoteDoc(id).then(function(){ renderNotes(); renderUpcoming(); });
+      });
+    });
+    box.querySelectorAll('.note-star').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.dataset.id;
+        var n = notes.find(function(x){ return x.id===id; });
+        if(n) n.starred = !n.starred;
+        saveNotes().then(function(){ renderNotes(); renderUpcoming(); });
+      });
+    });
+  }
+  document.getElementById('addNoteBtn').addEventListener('click', function(){
+    var wrap = document.getElementById('noteFormWrap');
+    wrap.innerHTML = '<div class="form-card">' +
+      '<div class="form-grid">' +
+        formField('Date (YYYY-MM-DD)','n-date','') +
+        selectField('Category','n-cat',['show','appt','general'],'show') +
+        '<div class="field full"><label>Title</label><input id="n-title" type="text"></div>' +
+        '<div class="field full"><label>Description</label><textarea id="n-desc"></textarea></div>' +
+      '</div>' +
+      '<div class="btn-row"><button class="btn rust" id="saveNoteForm">Save</button><button class="btn ghost" id="cancelNoteForm">Cancel</button></div>' +
+    '</div>';
+    document.getElementById('cancelNoteForm').addEventListener('click', function(){ wrap.innerHTML=''; });
+    document.getElementById('saveNoteForm').addEventListener('click', function(){
+      var date = val('n-date');
+      var title = val('n-title');
+      if(!date || !title){ alert('Please enter a date and title'); return; }
+      notes.push({id:uid('n'), date:date, title:title, desc:val('n-desc'), cat:document.getElementById('n-cat').value});
+      saveNotes().then(function(){ wrap.innerHTML=''; renderNotes(); });
+    });
+  });
+
+  // ---------- DATA BACKUP (manual export/import, failsafe alongside auto-storage) ----------
+  document.getElementById('downloadBackupBtn').addEventListener('click', function(){
+    var payload = { exportedAt: new Date().toISOString(), cattle: cattle, notes: notes };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = 'aca-cattle-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    document.getElementById('backupStatus').textContent = 'Backup downloaded.';
+  });
+  document.getElementById('importBackupBtn').addEventListener('click', function(){
+    document.getElementById('importBackupFile').click();
+  });
+  document.getElementById('importBackupFile').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var status = document.getElementById('backupStatus');
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        var data = JSON.parse(evt.target.result);
+        if(!data || !Array.isArray(data.cattle) || !Array.isArray(data.notes)){
+          status.textContent = 'That file does not look like a valid backup.';
+          return;
+        }
+        if(!confirm('This will replace all current data with the backup file. Continue?')) return;
+        cattle = data.cattle;
+        notes = data.notes;
+        Promise.all([saveCattle(), saveNotes()]).then(function(){
+          renderAll();
+          status.textContent = 'Backup restored successfully.';
+        });
+      }catch(err){
+        status.textContent = 'Could not read that file — is it a valid backup .json?';
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  function renderAll(){
+    renderDashboard();
+    renderAnimalHerd();
+    renderBreedingSelects();
+    renderNotes();
+    renderUpcoming();
+  }
+
+  if(window.fb){ initAuth(); }
+  else { window.addEventListener('firebase-ready', initAuth); }
+})();
+</script>
+
+</body>
+</html>
